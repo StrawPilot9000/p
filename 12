@@ -1,0 +1,174 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <vector>
+#include <algorithm>
+using namespace std;
+
+struct Employee {
+    int empID;
+    string name;
+    string designation;
+    double salary;
+};
+
+// Function to write employee data to the data file and update the index file
+void addEmployee() {
+    fstream dataFile("employee_data.txt", ios::in | ios::out | ios::app);
+    fstream indexFile("employee_index.txt", ios::in | ios::out | ios::app);
+
+    Employee e;
+    cout << "Enter Employee ID: ";
+    cin >> e.empID;
+    cin.ignore();  // Ignore newline after integer input
+    cout << "Enter Name: ";
+    getline(cin, e.name);
+    cout << "Enter Designation: ";
+    getline(cin, e.designation);
+    cout << "Enter Salary: ";
+    cin >> e.salary;
+
+    // Writing employee data to the data file
+    dataFile.seekp(0, ios::end); // Move the write pointer to the end
+    dataFile << e.empID << "," << e.name << "," << e.designation << "," << e.salary << endl;
+
+    // Writing index information to the index file
+    indexFile.seekp(0, ios::end);
+    indexFile << e.empID << "," << dataFile.tellp() - sizeof(e.empID) << endl;
+
+    dataFile.close();
+    indexFile.close();
+    cout << "Employee added successfully!" << endl;
+}
+
+// Function to display an employee's details based on Employee ID
+void displayEmployee(int empID) {
+    ifstream dataFile("employee_data.txt");
+    ifstream indexFile("employee_index.txt");
+
+    bool found = false;
+    int empIDInIndex;
+    streampos empPosition;
+
+    while (indexFile >> empIDInIndex) {
+        indexFile.ignore(); // Skip the comma
+        indexFile >> empPosition;
+        if (empIDInIndex == empID) {
+            found = true;
+            break;
+        }
+        indexFile.ignore(); // Skip the new line character
+    }
+
+    if (!found) {
+        cout << "Employee with ID " << empID << " not found." << endl;
+        return;
+    }
+
+    // Seek to the position of the employee's record in the data file
+    dataFile.seekg(empPosition);
+    Employee e;
+    string line;
+    getline(dataFile, line);
+    size_t pos = 0;
+    e.empID = stoi(line.substr(pos, line.find(',')));
+    pos = line.find(',') + 1;
+    e.name = line.substr(pos, line.find(',', pos) - pos);
+    pos = line.find(',', pos) + 1;
+    e.designation = line.substr(pos, line.find(',', pos) - pos);
+    pos = line.find(',', pos) + 1;
+    e.salary = stod(line.substr(pos));
+
+    cout << "\nEmployee ID: " << e.empID << endl;
+    cout << "Name: " << e.name << endl;
+    cout << "Designation: " << e.designation << endl;
+    cout << "Salary: " << e.salary << endl;
+
+    dataFile.close();
+    indexFile.close();
+}
+
+// Function to delete an employee record based on Employee ID
+void deleteEmployee(int empID) {
+    fstream dataFile("employee_data.txt", ios::in | ios::out);
+    fstream indexFile("employee_index.txt", ios::in | ios::out);
+
+    vector<string> dataLines;
+    vector<string> indexLines;
+    bool found = false;
+    int empIDInIndex;
+    streampos empPosition;
+
+    while (indexFile >> empIDInIndex) {
+        indexFile.ignore(); // Skip comma
+        indexFile >> empPosition;
+        if (empIDInIndex != empID) {
+            indexLines.push_back(to_string(empIDInIndex) + "," + to_string(empPosition));
+        } else {
+            found = true;
+        }
+        indexFile.ignore(); // Skip new line character
+    }
+
+    if (!found) {
+        cout << "Employee with ID " << empID << " not found." << endl;
+        return;
+    }
+
+    indexFile.close();
+    indexFile.open("employee_index.txt", ios::out | ios::trunc);
+    for (const string &line : indexLines) {
+        indexFile << line << endl;
+    }
+
+    dataFile.seekg(0, ios::beg);
+    string line;
+    while (getline(dataFile, line)) {
+        if (stoi(line.substr(0, line.find(','))) != empID) {
+            dataLines.push_back(line);
+        }
+    }
+
+    dataFile.close();
+    dataFile.open("employee_data.txt", ios::out | ios::trunc);
+    for (const string &dataLine : dataLines) {
+        dataFile << dataLine << endl;
+    }
+
+    cout << "Employee deleted successfully!" << endl;
+}
+
+int main() {
+    int choice, empID;
+
+    do {
+        cout << "\n--- Employee Management System ---\n";
+        cout << "1. Add Employee\n2. Display Employee\n3. Delete Employee\n4. Exit\n";
+        cout << "Enter choice: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1:
+                addEmployee();
+                break;
+            case 2:
+                cout << "Enter Employee ID to display: ";
+                cin >> empID;
+                displayEmployee(empID);
+                break;
+            case 3:
+                cout << "Enter Employee ID to delete: ";
+                cin >> empID;
+                deleteEmployee(empID);
+                break;
+            case 4:
+                cout << "Exiting...\n";
+                break;
+            default:
+                cout << "Invalid choice.\n";
+        }
+
+    } while (choice != 4);
+
+    return 0;
+}
