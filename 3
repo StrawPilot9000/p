@@ -1,0 +1,82 @@
+class Node:
+    def __init__(self, key):
+        self.data = key
+        self.left = None
+        self.right = None
+
+class BST:
+    def __init__(self):
+        self.root = None
+
+    def insert(self, root, key):
+        if not root:
+            return Node(key)
+        if key < root.data:
+            root.left = self.insert(root.left, key)
+        else:
+            root.right = self.insert(root.right, key)
+        return root
+
+    def search(self, root, key):
+        if not root:
+            return False
+        if root.data == key:
+            return True
+        if key < root.data:
+            return self.search(root.left, key)
+        else:
+            return self.search(root.right, key)
+
+    def min_value(self, root):
+        current = root
+        while current and current.left:
+            current = current.left
+        return current.data if current else None
+
+    def max_depth(self, root):
+        if not root:
+            return 0
+        return 1 + max(self.max_depth(root.left), self.max_depth(root.right))
+
+    def mirror(self, root):
+        if root:
+            root.left, root.right = self.mirror(root.right), self.mirror(root.left)
+        return root
+
+    def inorder(self, root):
+        if root:
+            self.inorder(root.left)
+            print(root.data, end=' ')
+            self.inorder(root.right)
+
+# --- Example usage ---
+
+# Create BST and insert initial values
+bst = BST()
+values = [50, 30, 20, 40, 70, 60, 80]  # You can change this
+for val in values:
+    bst.root = bst.insert(bst.root, val)
+
+# Insert new node
+new_value = int(input("Enter new node to insert: "))
+bst.root = bst.insert(bst.root, new_value)
+
+# Inorder traversal
+print("\nInorder Traversal of BST:")
+bst.inorder(bst.root)
+
+# Longest path
+print("\n\nLength of longest path (height):", bst.max_depth(bst.root))
+
+# Minimum value
+print("Minimum value in BST:", bst.min_value(bst.root))
+
+# Mirror the tree
+bst.root = bst.mirror(bst.root)
+print("Inorder after mirroring:")
+bst.inorder(bst.root)
+
+# Search for a value
+search_val = int(input("\n\nEnter value to search: "))
+found = bst.search(bst.root, search_val)
+print("Found!" if found else "Not found.")
