@@ -1,0 +1,60 @@
+# Telephone book using a hash table
+telephone_book = {}
+
+def add_client():
+    name = input("Enter client name: ")
+    number = input("Enter telephone number: ")
+    telephone_book[name] = number
+    print(f"{name} added successfully.")
+
+def lookup_client():
+    name = input("Enter client name to search: ")
+    number = telephone_book.get(name)
+    if number:
+        print(f"Telephone number of {name}: {number}")
+    else:
+        print("Client not found.")
+
+def delete_client():
+    name = input("Enter client name to delete: ")
+    if name in telephone_book:
+        del telephone_book[name]
+        print(f"{name} deleted successfully.")
+    else:
+        print("Client not found.")
+
+def display_all():
+    if not telephone_book:
+        print("Telephone book is empty.")
+    else:
+        print("All clients in the telephone book:")
+        for name, number in telephone_book.items():
+            print(f"{name}: {number}")
+
+def main():
+    while True:
+        print("\n--- Telephone Book Menu ---")
+        print("1. Add Client")
+        print("2. Lookup Client")
+        print("3. Delete Client")
+        print("4. Display All Clients")
+        print("5. Exit")
+
+        choice = input("Enter your choice (1-5): ")
+
+        if choice == '1':
+            add_client()
+        elif choice == '2':
+            lookup_client()
+        elif choice == '3':
+            delete_client()
+        elif choice == '4':
+            display_all()
+        elif choice == '5':
+            print("Exiting Telephone Book.")
+            break
+        else:
+            print("Invalid choice. Please try again.")
+
+if __name__ == "__main__":
+    main()
