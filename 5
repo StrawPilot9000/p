@@ -1,75 +1,81 @@
-class Node:
-    def __init__(self, key):
-        self.data = key
-        self.left = None
-        self.right = None
-        self.isThreaded = False  # indicates if right pointer is a thread
+#include <iostream>
+using namespace std;
 
-# Helper function to insert nodes into a regular BST
-def insert(root, key):
-    if not root:
-        return Node(key)
-    if key < root.data:
-        root.left = insert(root.left, key)
-    else:
-        root.right = insert(root.right, key)
-    return root
+struct Node {
+    int data;
+    Node* left;
+    Node* right;
+    bool rightThread;
 
-# Function to convert to threaded binary tree
-def create_threaded(root):
-    def convert(node, prev):
-        if not node:
-            return prev
-        # Recur on left subtree
-        prev = convert(node.left, prev)
+    Node(int val) {
+        data = val;
+        left = right = nullptr;
+        rightThread = false;
+    }
+};
 
-        # If previous node exists and its right is None, thread it
-        if prev and not prev.right:
-            prev.right = node
-            prev.isThreaded = True
+// Insert into a regular binary tree (for testing)
+Node* insert(Node* root, int key) {
+    if (!root) return new Node(key);
+    if (key < root->data)
+        root->left = insert(root->left, key);
+    else
+        root->right = insert(root->right, key);
+    return root;
+}
 
-        # Update previous node to current
-        prev = node
+// Helper for threading: performs reverse inorder traversal
+void createThreaded(Node* root, Node*& prev) {
+    if (!root) return;
 
-        # Recur on right subtree
-        if not node.isThreaded:
-            prev = convert(node.right, prev)
+    createThreaded(root->right, prev);
 
-        return prev
+    if (!root->right) {
+        root->right = prev;
+        root->rightThread = true;
+    }
 
-    convert(root, None)
-    return root
+    prev = root;
+    createThreaded(root->left, prev);
+}
 
-# Inorder traversal without recursion using threads
-def inorder_threaded(root):
-    curr = leftmost(root)
-    while curr:
-        print(curr.data, end=" ")
-        if curr.isThreaded:
-            curr = curr.right
-        else:
-            curr = leftmost(curr.right)
+// Wrapper to initiate threading
+void convertToThreaded(Node* root) {
+    Node* prev = nullptr;
+    createThreaded(root, prev);
+}
 
-def leftmost(node):
-    while node and node.left:
-        node = node.left
-    return node
+// Inorder traversal using threading
+void inorderThreaded(Node* root) {
+    Node* curr = root;
+    while (curr && curr->left) curr = curr->left;
 
-# --- Example usage ---
-root = None
-for key in [20, 10, 30, 5, 15, 25, 35]:
-    root = insert(root, key)
+    while (curr) {
+        cout << curr->data << " ";
+        if (curr->rightThread)
+            curr = curr->right;
+        else {
+            curr = curr->right;
+            while (curr && curr->left)
+                curr = curr->left;
+        }
+    }
+}
 
-print("Inorder traversal before threading:")
-def inorder(node):
-    if node:
-        inorder(node.left)
-        print(node.data, end=" ")
-        inorder(node.right)
-inorder(root)
-print()
+int main() {
+    Node* root = nullptr;
+    root = insert(root, 50);
+    insert(root, 30);
+    insert(root, 70);
+    insert(root, 20);
+    insert(root, 40);
+    insert(root, 60);
+    insert(root, 80);
 
-# Convert to threaded and traverse
-create_threaded(root)
-print("Inorder traversal using threads:")
-inorder_threaded(root)
+    convertToThreaded(root);
+
+    cout << "Inorder traversal using threaded binary tree:\n";
+    inorderThreaded(root);
+
+    return 0;
+}
