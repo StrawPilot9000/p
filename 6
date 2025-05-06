@@ -1,42 +1,74 @@
-class Graph:
-    def __init__(self):
-        self.graph = {}
-        
-    # Add a flight path (edge)
-    def add_edge(self, city1, city2, cost):
-        if city1 not in self.graph:
-            self.graph[city1] = []
-        if city2 not in self.graph:
-            self.graph[city2] = []
-        self.graph[city1].append((city2, cost))
-        self.graph[city2].append((city1, cost))  # Undirected graph
-    
-    # Depth-First Search (DFS) to check connectivity
-    def dfs(self, city, visited):
-        visited.add(city)
-        for neighbor, _ in self.graph.get(city, []):
-            if neighbor not in visited:
-                self.dfs(neighbor, visited)
-    
-    # Check if the graph is connected
-    def is_connected(self):
-        visited = set()
-        # Start DFS from any node, here we choose the first node in the graph
-        start_city = list(self.graph.keys())[0]
-        self.dfs(start_city, visited)
-        
-        # If all cities are visited, then the graph is connected
-        return len(visited) == len(self.graph)
+#include <iostream>
+#include <unordered_map>
+#include <vector>
+#include <stack>
+#include <string>
+#include <set>
+using namespace std;
 
-# Example usage:
-g = Graph()
-g.add_edge('CityA', 'CityB', 120)  # Flight between CityA and CityB with a cost of 120 (time or fuel)
-g.add_edge('CityB', 'CityC', 150)
-g.add_edge('CityA', 'CityC', 180)
-g.add_edge('CityD', 'CityE', 200)
+class Graph {
+    unordered_map<string, vector<pair<string, int>>> adjList; // city -> [(destination, cost)]
+    set<string> cities;
 
-# Check if the graph is connected
-if g.is_connected():
-    print("The flight network is connected.")
-else:
-    print("The flight network is not connected.")
+public:
+    void addFlight(string from, string to, int cost) {
+        adjList[from].push_back({to, cost});
+        adjList[to].push_back({from, cost});  // assuming undirected (bidirectional) flight path
+        cities.insert(from);
+        cities.insert(to);
+    }
+
+    void displayGraph() {
+        cout << "Flight Graph (Adjacency List):\n";
+        for (auto& pair : adjList) {
+            cout << pair.first << " -> ";
+            for (auto& neighbor : pair.second) {
+                cout << "(" << neighbor.first << ", cost: " << neighbor.second << ") ";
+            }
+            cout << endl;
+        }
+    }
+
+    // DFS to check connectivity
+    void DFS(string start, set<string>& visited) {
+        stack<string> s;
+        s.push(start);
+        while (!s.empty()) {
+            string curr = s.top(); s.pop();
+            if (!visited.count(curr)) {
+                visited.insert(curr);
+                for (auto& neighbor : adjList[curr]) {
+                    if (!visited.count(neighbor.first))
+                        s.push(neighbor.first);
+                }
+            }
+        }
+    }
+
+    bool isConnected() {
+        if (cities.empty()) return true;
+        set<string> visited;
+        DFS(*cities.begin(), visited);
+        return visited.size() == cities.size();
+    }
+};
+
+int main() {
+    Graph g;
+
+    // Add cities and flights (edges with cost)
+    g.addFlight("Pune", "Mumbai", 120);
+    g.addFlight("Mumbai", "Delhi", 180);
+    g.addFlight("Delhi", "Bangalore", 200);
+    g.addFlight("Bangalore", "Chennai", 100);
+    // g.addFlight("Hyderabad", "Kolkata", 150); // Uncomment this to make graph disconnected
+
+    g.displayGraph();
+
+    if (g.isConnected())
+        cout << "\nThe flight network is connected.\n";
+    else
+        cout << "\nThe flight network is NOT connected.\n";
+
+    return 0;
+}
