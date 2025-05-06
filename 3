@@ -1,82 +1,100 @@
-class Node:
-    def __init__(self, key):
-        self.data = key
-        self.left = None
-        self.right = None
+#include <iostream>
+using namespace std;
 
-class BST:
-    def __init__(self):
-        self.root = None
+// Node structure
+struct Node {
+    int data;
+    Node* left;
+    Node* right;
 
-    def insert(self, root, key):
-        if not root:
-            return Node(key)
-        if key < root.data:
-            root.left = self.insert(root.left, key)
-        else:
-            root.right = self.insert(root.right, key)
-        return root
+    Node(int value) {
+        data = value;
+        left = right = nullptr;
+    }
+};
 
-    def search(self, root, key):
-        if not root:
-            return False
-        if root.data == key:
-            return True
-        if key < root.data:
-            return self.search(root.left, key)
-        else:
-            return self.search(root.right, key)
+// Insert node in BST
+Node* insert(Node* root, int value) {
+    if (!root) return new Node(value);
+    if (value < root->data)
+        root->left = insert(root->left, value);
+    else
+        root->right = insert(root->right, value);
+    return root;
+}
 
-    def min_value(self, root):
-        current = root
-        while current and current.left:
-            current = current.left
-        return current.data if current else None
+// Find height (longest path)
+int longestPath(Node* root) {
+    if (!root) return 0;
+    int left = longestPath(root->left);
+    int right = longestPath(root->right);
+    return max(left, right) + 1;
+}
 
-    def max_depth(self, root):
-        if not root:
-            return 0
-        return 1 + max(self.max_depth(root.left), self.max_depth(root.right))
+// Find minimum value
+int findMin(Node* root) {
+    if (!root) return -1; // Or throw error
+    while (root->left) root = root->left;
+    return root->data;
+}
 
-    def mirror(self, root):
-        if root:
-            root.left, root.right = self.mirror(root.right), self.mirror(root.left)
-        return root
+// Mirror the tree
+void mirror(Node* root) {
+    if (!root) return;
+    swap(root->left, root->right);
+    mirror(root->left);
+    mirror(root->right);
+}
 
-    def inorder(self, root):
-        if root:
-            self.inorder(root.left)
-            print(root.data, end=' ')
-            self.inorder(root.right)
+// Search a value
+bool search(Node* root, int value) {
+    if (!root) return false;
+    if (root->data == value) return true;
+    else if (value < root->data)
+        return search(root->left, value);
+    else
+        return search(root->right, value);
+}
 
-# --- Example usage ---
+// Inorder traversal
+void inorder(Node* root) {
+    if (!root) return;
+    inorder(root->left);
+    cout << root->data << " ";
+    inorder(root->right);
+}
 
-# Create BST and insert initial values
-bst = BST()
-values = [50, 30, 20, 40, 70, 60, 80]  # You can change this
-for val in values:
-    bst.root = bst.insert(bst.root, val)
+int main() {
+    Node* root = nullptr;
+    int values[] = {50, 30, 70, 20, 40, 60, 80};  // Example input order
+    for (int val : values)
+        root = insert(root, val);
 
-# Insert new node
-new_value = int(input("Enter new node to insert: "))
-bst.root = bst.insert(bst.root, new_value)
+    cout << "Inorder traversal of BST: ";
+    inorder(root);
+    cout << "\n";
 
-# Inorder traversal
-print("\nInorder Traversal of BST:")
-bst.inorder(bst.root)
+    // Insert new node
+    root = insert(root, 25);
+    cout << "After inserting 25, inorder: ";
+    inorder(root);
+    cout << "\n";
 
-# Longest path
-print("\n\nLength of longest path (height):", bst.max_depth(bst.root))
+    // Longest path (height)
+    cout << "Height of tree (longest path): " << longestPath(root) << "\n";
 
-# Minimum value
-print("Minimum value in BST:", bst.min_value(bst.root))
+    // Minimum value
+    cout << "Minimum value in BST: " << findMin(root) << "\n";
 
-# Mirror the tree
-bst.root = bst.mirror(bst.root)
-print("Inorder after mirroring:")
-bst.inorder(bst.root)
+    // Mirror the tree
+    mirror(root);
+    cout << "Inorder after mirroring: ";
+    inorder(root);
+    cout << "\n";
 
-# Search for a value
-search_val = int(input("\n\nEnter value to search: "))
-found = bst.search(bst.root, search_val)
-print("Found!" if found else "Not found.")
+    // Search value
+    int key = 40;
+    cout << "Searching " << key << ": " << (search(root, key) ? "Found" : "Not Found") << "\n";
+
+    return 0;
+}
